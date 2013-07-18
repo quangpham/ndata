@@ -6,7 +6,7 @@ using System.Collections.Generic;
 [System.Serializable]
 public class NguiDataContext : MonoBehaviour
 {
-	protected EZData.Context _context;
+	protected EZData.IContext _context;
 		
 	public EZData.Property<T> FindProperty<T>(string path, NguiBaseBinding binding)
 	{

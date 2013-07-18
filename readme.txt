@@ -24,6 +24,16 @@ MVVM (Model-View-ViewModel) pattern is one of the popular ways of separating UI 
 
 Release notes
 
+Version 1.0.15
+==============
+	MonoBehaviourContext support
+	Default context support in views
+	Content reposition on items removal in ItemsSourceBinding
+	Master path behavior fix on template paths resolution
+	Texture loader example
+	DateTimeText example
+
+
 Version 1.0.14
 ==============
 	Separate transform fields binding

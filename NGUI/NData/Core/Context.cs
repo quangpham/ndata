@@ -13,6 +13,14 @@ namespace EZData
 	public interface IBindingPathTarget
 	{
 	}
+	
+	public interface IContext
+	{
+		Delegate FindCommand(string path, IBinding binding);
+		Property<T> FindProperty<T>(string path, IBinding binding);
+		Property<int> FindEnumProperty(string path, IBinding binding);
+		Collection FindCollection(string path, IBinding binding);
+	}
 
     public delegate void Command();
 	
@@ -46,7 +54,7 @@ namespace EZData
 				
         public const string VariableContextPostfix = "EzVariableContext";
 
-        private static T Find<T>(object node, string path, IBinding binding)
+        internal static T Find<T>(object node, string path, IBinding binding)
 			where T : class
         {
 			if (node == null)
@@ -131,7 +139,7 @@ namespace EZData
         }
     }
 #else
-    public class Context : IBindingPathTarget
+    public class Context : IBindingPathTarget, IContext
     {
         public const string VariableContextPostfix = "EzVariableContext";
 		
@@ -144,7 +152,7 @@ namespace EZData
 		}
 		
 		
-        private static Delegate NodeToDelegate(object node, string path)
+        internal static Delegate NodeToDelegate(object node, string path)
         {
             if (node == null)
                 return null;
@@ -159,7 +167,7 @@ namespace EZData
             return Delegate.CreateDelegate(typeof(Command), node, reflectionProperty);
         }
 
-        private static Property<int> NodeToEnumProperty(object node, string path)
+        internal static Property<int> NodeToEnumProperty(object node, string path)
         {
             if (node == null)
                 return null;
@@ -185,7 +193,7 @@ namespace EZData
             return null;
         }
 
-        private static Collection NodeToCollection(object node, string path)
+        internal static Collection NodeToCollection(object node, string path)
         {
             if (node == null)
                 return null;
@@ -198,11 +206,11 @@ namespace EZData
             return reflectionProperty.GetValue(node, null) as Collection;
         }
 
-        private delegate T Converter<out T>(object node, string leafPropertyName);
+        internal delegate T Converter<out T>(object node, string leafPropertyName);
 
         // Changes made in this function should be reflected in FindProperty<T>, see details there
         //
-        private static T Find<T>(object node, string path, IBinding binding, Converter<T> converter)
+        internal static T Find<T>(object node, string path, IBinding binding, Converter<T> converter)
         {
             if (node == null)
                 return default(T);
@@ -270,7 +278,7 @@ namespace EZData
         // Cons:
         // - whenever changes are made into path resolve sequence, they have to be made in two places
         //
-		private static Property<T> FindProperty<T>(object node, string path, IBinding binding)
+		internal static Property<T> FindProperty<T>(object node, string path, IBinding binding)
         {
             if (node == null)
                 return default(Property<T>);
@@ -375,4 +383,36 @@ namespace EZData
         }
     }
 #endif
+	
+	public class MonoBehaviourContext : MonoBehaviour, IContext
+	{
+		public Delegate FindCommand(string path, IBinding binding)
+        {
+// Explicit generic arguments are required here for Mono builds
+// ReSharper disable RedundantTypeArgumentsOfMethod
+            return Context.Find<Delegate>(this, path, binding, Context.NodeToDelegate);
+// ReSharper restore RedundantTypeArgumentsOfMethod
+        }
+
+        public Property<T> FindProperty<T>(string path, IBinding binding)
+        {
+            return Context.FindProperty<T>(this, path, binding);
+        }
+
+        public Property<int> FindEnumProperty(string path, IBinding binding)
+        {
+// Explicit generic arguments are required here for Mono builds
+// ReSharper disable RedundantTypeArgumentsOfMethod
+            return Context.Find<Property<int>>(this, path, binding, Context.NodeToEnumProperty);
+// ReSharper restore RedundantTypeArgumentsOfMethod
+        }
+
+        public Collection FindCollection(string path, IBinding binding)
+        {
+// Explicit generic arguments are required here for Mono builds
+// ReSharper disable RedundantTypeArgumentsOfMethod
+            return Context.Find<Collection>(this, path, binding, Context.NodeToCollection);
+// ReSharper restore RedundantTypeArgumentsOfMethod
+        }
+	}
 }

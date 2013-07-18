@@ -4,18 +4,6 @@ using ItemsListContexts;
 
 namespace ItemsListContexts
 {
-	public class Tag : EZData.Context
-	{
-		#region Property Name
-		private readonly EZData.Property<string> _privateNameProperty = new EZData.Property<string>();
-		public EZData.Property<string> NameProperty { get { return _privateNameProperty; } }
-		public string Name
-		{
-		get    { return NameProperty.GetValue();    }
-		set    { NameProperty.SetValue(value); }
-		}
-		#endregion
-	}
 	public class ClothingItem : EZData.Context
 	{
 		#region Property Name
@@ -87,12 +75,6 @@ namespace ItemsListContexts
 		set    { MovementSpeedProperty.SetValue(value); }
 		}
 		#endregion
-		
-		#region Collection Tags
-		private readonly EZData.Collection<Tag> _privateTags = new EZData.Collection<Tag>(false);
-		public EZData.Collection<Tag> Tags { get { return _privateTags; } }
-		#endregion
-		
 
 	}
 	
@@ -118,19 +100,13 @@ namespace ItemsListContexts
 		
 		public void Load()
 		{
-			ClothingItem item = new ClothingItem {
-				Name = "Boots of Hast1e",
+			Backpack.Add(new ClothingItem()
+			{
+				Name = "Boots of Haste",
 				Description = "Increase movement speed, so your character can move faster.",
 				Icon = "YellowButton",
 				MovementSpeed = 15,
-				
-			};
-			item.Tags.Add (new Tag {Name = "Tag1"});
-			item.Tags.Add (new Tag {Name = "Tag2"});
-			item.Tags.Add (new Tag {Name = "Tag3"});
-			item.Tags.Add (new Tag {Name = "Tag4"});
-			
-			Backpack.Add (item);
+			});
 			
 			Backpack.Add(new ClothingItem()
 			{

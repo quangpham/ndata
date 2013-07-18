@@ -115,37 +115,7 @@ public class NguiItemsSourceBinding : NguiBinding
 			var visible = parentVisibility == null ? true : parentVisibility.Visible;
 			NguiUtils.SetVisible(itemObject, visible);
 			
-			if (_uiTable != null)
-			{
-				var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
-					gameObject);
-				if (parentLookup == null)
-					_uiTable.repositionNow = true;
-				else
-					_uiTable.Reposition();
-			}
-			
-			if (_uiGrid != null)
-			{
-				var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
-					gameObject);
-				if (parentLookup == null)
-					_uiGrid.repositionNow = true;
-				else
-					_uiGrid.Reposition();
-			}
-			
-			var parent = NguiUtils.GetComponentInParentsExcluding<UITable>(gameObject);
-			while (parent != null)
-			{
-				var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
-					parent.gameObject);
-				if (parentLookup == null)
-					parent.repositionNow = true;
-				else
-					parent.Reposition();
-				parent = parentLookup;
-			}
+			RepositionContent();
 		}
 	}
 	
@@ -180,11 +150,42 @@ public class NguiItemsSourceBinding : NguiBinding
 			}
 		}
 	
+		RepositionContent();
+	}
+	
+	private void RepositionContent()
+	{
 		if (_uiTable != null)
-			_uiTable.repositionNow = true;
+		{
+			var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
+				gameObject);
+			if (parentLookup == null)
+				_uiTable.repositionNow = true;
+			else
+				_uiTable.Reposition();
+		}
 		
 		if (_uiGrid != null)
-			_uiGrid.repositionNow = true;
+		{
+			var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
+				gameObject);
+			if (parentLookup == null)
+				_uiGrid.repositionNow = true;
+			else
+				_uiGrid.Reposition();
+		}
+		
+		var parent = NguiUtils.GetComponentInParentsExcluding<UITable>(gameObject);
+		while (parent != null)
+		{
+			var parentLookup = NguiUtils.GetComponentInParentsExcluding<UITable>(
+				parent.gameObject);
+			if (parentLookup == null)
+				parent.repositionNow = true;
+			else
+				parent.Reposition();
+			parent = parentLookup;
+		}
 	}
 	
 	protected virtual void OnItemsClear()
@@ -196,6 +197,8 @@ public class NguiItemsSourceBinding : NguiBinding
 		{
 			GameObject.DestroyImmediate(transform.GetChild(0).gameObject);
 		}
+		
+		RepositionContent();
 	}
 	
 	public void OnSelectionChange(GameObject selectedObject)

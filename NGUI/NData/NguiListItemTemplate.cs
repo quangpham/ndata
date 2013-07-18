@@ -30,7 +30,6 @@ public class NguiListItemTemplate : MonoBehaviour
 			if (cd.draggableCamera == null && DraggableCamera != null)
 				cd.draggableCamera = DraggableCamera;
 		}
-		
 		var itemData = instance.AddComponent<NguiItemDataContext>();
 		
 		instance.transform.parent = transform;

@@ -72,7 +72,7 @@ public abstract class NguiBaseBinding : MonoBehaviour, EZData.IBinding
 	
 	public void UpdateBinding()
 	{
-		UpdateMasterPath();
+		//UpdateMasterPath();
 		Unbind();
 		Bind();
 		OnChange();
