@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class SceneValidator
 {
+	private const string MasterPathStopper = "#";
+	
 	private static string GetGameObjectPath(GameObject gameObject)
 	{
 		if (gameObject == null)
@@ -125,13 +127,21 @@ public class SceneValidator
 		return array[depth];
 	}
 	
-	private static string GetFullCleanPath(Stack<string> masterPaths, string path)
+	private static string GetFullCleanPath(Stack<string> masterPaths, string path, int depthToGo)
 	{
 		var masterPath = string.Empty;
 		foreach(var p in masterPaths)
 		{
 			if (string.IsNullOrEmpty(p))
 				continue;
+			
+			if (p == MasterPathStopper)
+			{
+				if (depthToGo == 0)
+					break;
+				depthToGo--;
+				continue;
+			}
 			
 			if (string.IsNullOrEmpty(masterPath))
 				masterPath = p;
@@ -166,7 +176,7 @@ public class SceneValidator
 			
 			foreach(var p in paths)
 			{
-				var cleanPath = GetFullCleanPath(masterPaths, p);
+				var cleanPath = GetFullCleanPath(masterPaths, NguiUtils.GetCleanPath(p), NguiUtils.GetPathDepth(p));
 				var cleanType = GetCleanType(type, NguiUtils.GetPathDepth(p));
 				types.Add(GetBindingValueType(cleanPath, cleanType, gameObject, c is NguiCommandBinding));
 			}
@@ -177,8 +187,10 @@ public class SceneValidator
 				c is NguiItemsSourceBinding)
 			{
 				type.Push(GetCollectionValueType(types[0]));
+				masterPaths.Push(MasterPathStopper);
 				for (var i = 0; i < c.transform.childCount; ++i)
 					ValidateRootObjectBindings(c.transform.GetChild(i).gameObject, type, templatesPath, masterPaths);
+				masterPaths.Pop();
 				type.Pop();
 				childrenValidated = true;
 			}
@@ -197,14 +209,16 @@ public class SceneValidator
 					}
 					templatesPath.Push(l.Template);
 					type.Push(GetCollectionValueType(types[0]));
+					masterPaths.Push(MasterPathStopper);
 					ValidateRootObjectBindings(l.Template, type, templatesPath, masterPaths);
+					masterPaths.Pop();
 					type.Pop();
 					templatesPath.Pop();
 				}	
 			}
 			foreach(var p in c.gameObject.GetComponents<NguiPopupListSourceBinding>())
 			{
-				var cleanPath = GetFullCleanPath(masterPaths, p.DisplayValuePath);
+				var cleanPath = GetFullCleanPath(masterPaths, NguiUtils.GetCleanPath(p.DisplayValuePath), NguiUtils.GetPathDepth(p.DisplayValuePath));
 				var cleanType = GetCleanType(type, NguiUtils.GetPathDepth(p.DisplayValuePath));
 				GetBindingValueType(cleanPath, cleanType, gameObject, false);
 			}	
@@ -242,6 +256,13 @@ public class SceneValidator
 			var templatesPath = new Stack<GameObject>();
 			var masterPaths = new Stack<string>();
 			//type.Push(typeof(Ui.Game)); // Use your root data context class type here to speed up validation
+			
+			if (type.Count == 0)
+			{
+				var rootContext = NguiUtils.GetComponentInParents<NguiDataContext>(s) as NguiRootContext;
+				if (rootContext != null && rootContext.defaultContext != null)
+					type.Push(rootContext.defaultContext.GetType());
+			}
 			
 			if (type.Count == 0)
 			{

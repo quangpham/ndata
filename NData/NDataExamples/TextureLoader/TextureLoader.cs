@@ -18,18 +18,16 @@ public class TextureLoaderContext : EZData.Context
 	set    { ImageUrlProperty.SetValue(value); }
 	}
 	#endregion
-	
-	
-	#region Property ImageTexture
-	private readonly EZData.Property<Texture2D> _privateImageTextureProperty = new EZData.Property<Texture2D>();
-	public EZData.Property<Texture2D> ImageTextureProperty { get { return _privateImageTextureProperty; } }
-	public Texture2D ImageTexture
+
+	#region Property LoadedImage
+	private readonly EZData.Property<Texture2D> _privateLoadedImageProperty = new EZData.Property<Texture2D>();
+	public EZData.Property<Texture2D> LoadedImageProperty { get { return _privateLoadedImageProperty; } }
+	public Texture2D LoadedImage
 	{
-	get    { return ImageTextureProperty.GetValue();    }
-	set    { ImageTextureProperty.SetValue(value); }
+	get    { return LoadedImageProperty.GetValue();    }
+	set    { LoadedImageProperty.SetValue(value); }
 	}
 	#endregion
-	
 	
 	private IWwwLoader _wwwLoader;
 	public TextureLoaderContext(IWwwLoader wwwLoader)
@@ -39,7 +37,7 @@ public class TextureLoaderContext : EZData.Context
 	
 	public void LoadImage()
 	{
-		_wwwLoader.LoadTexture(ImageUrl, (texture) => ImageTexture = texture);
+		_wwwLoader.LoadTexture(ImageUrl, (texture) => LoadedImage = texture);
 	}
 }
 
@@ -48,23 +46,20 @@ public class TextureLoader : MonoBehaviour, IWwwLoader
 	public NguiRootContext View;
 	public TextureLoaderContext Context;
 	
-	
-	
-	public void LoadTexture(string url, Action<Texture2D> callback)
-	{
-		StartCoroutine(LoadTexture(new WWW(url), callback));
-	}
-	
 	private IEnumerator LoadTexture(WWW www, Action<Texture2D> callback)
 	{
 		yield return www;
 		callback(string.IsNullOrEmpty(www.error) ? www.texture : null);
 	}
 	
+	public void LoadTexture(string url, Action<Texture2D> callback)
+	{
+		StartCoroutine(LoadTexture(new WWW(url), callback));
+	}
+	
 	void Awake()
 	{
 		Context = new TextureLoaderContext(this);
 		View.SetContext(Context);
-		Context.LoadImage();
 	}
 }

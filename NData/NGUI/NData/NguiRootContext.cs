@@ -6,7 +6,15 @@ using System.Collections.Generic;
 [AddComponentMenu("NGUI/NData/Root Context")]
 public class NguiRootContext : NguiDataContext
 {
-	public void SetContext(EZData.Context context)
+	public EZData.MonoBehaviourContext defaultContext;
+	
+	void Awake()
+	{
+		if (defaultContext != null && _context == null)
+			SetContext(defaultContext);
+	}
+	
+	public void SetContext(EZData.IContext context)
 	{
 		_context = context;
 	}

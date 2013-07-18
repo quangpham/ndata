@@ -8,12 +8,54 @@ public abstract class NguiBaseBinding : MonoBehaviour, EZData.IBinding
 	public abstract IList<string> ReferencedPaths { get; }
 	
 	private Dictionary<int, NguiDataContext> _contexts = new Dictionary<int, NguiDataContext>();
-	private string _masterPath;
+	private Dictionary<int, string> _masterPaths = new Dictionary<int, string>();
+	
+	private static NguiMasterPath GetParentMasterPath(GameObject gameObject)
+	{
+		var p = gameObject;
+		
+		if (p.GetComponent<NguiDataContext>() != null)
+			return null;
+		
+		NguiMasterPath component = null;
+		while (p != null && component == null)
+		{
+			if (p.GetComponent<NguiDataContext>() != null)
+				return null;
+			
+			component = p.GetComponent<NguiMasterPath>();
+			p = (p.transform.parent == null) ? null : p.transform.parent.gameObject;
+		}
+		return component;
+	}
 	
 	private void UpdateMasterPath()
 	{
-		var masterPath = NguiUtils.GetComponentInParents<NguiMasterPath>(gameObject);
-		_masterPath = (masterPath == null) ? string.Empty : masterPath.GetFullPath();
+		_masterPaths.Clear();
+		var p = gameObject;
+		
+		var lastAddedPath = "";
+		var lastAddedDepth = -1;
+		var depth = 0;
+		
+		while (p != null)
+		{
+			if (p.GetComponent<NguiDataContext>() != null)
+				depth++;
+			
+			var component = p.GetComponent<NguiMasterPath>();
+			if (component != null)
+			{
+				for (var d = lastAddedDepth + 1; d < depth; ++d)
+				{
+					_masterPaths.Add(d, lastAddedPath);
+				}
+				lastAddedPath = component.GetFullPath();
+				lastAddedDepth = depth;
+				_masterPaths.Add(lastAddedDepth, lastAddedPath);
+			}
+			p = (p.transform.parent == null) ? null : p.transform.parent.gameObject;
+		}
 	}
 	
 	protected virtual void Bind()
@@ -78,12 +120,14 @@ public abstract class NguiBaseBinding : MonoBehaviour, EZData.IBinding
 	
 	public string GetFullCleanPath(string path)
 	{
-		var result = NguiUtils.GetCleanPath(path);
+		var depthToGo = NguiUtils.GetPathDepth(path);
+		var cleanPath = NguiUtils.GetCleanPath(path);
 		
-		if (!string.IsNullOrEmpty(_masterPath))
-			result = _masterPath + "." + result;
+		string masterPath;
+		if (_masterPaths.TryGetValue(depthToGo, out masterPath) && !string.IsNullOrEmpty(masterPath))
+			return masterPath + "." + cleanPath;
 		
-		return result;
+		return cleanPath;
 	}
 	
 	private void ClearNullProperties(Dictionary<System.Type, EZData.Property> properties)
